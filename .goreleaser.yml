@@ -1,0 +1,47 @@
+env:
+  - GO111MODULE=on
+  - CGO_ENABLED=0
+
+before:
+  hooks:
+    - go mod tidy
+    - go mod download
+
+builds:
+  - main: ./cmd/cbnode/main.go
+    binary: cbnode
+    id: cbnode
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+    hooks:
+      pre:
+        - cmd: bash -c "GOOS={{ .Os }} GOARCH={{ .Arch }} packr2"
+          dir: db
+      post:
+        - cmd: packr2 clean
+          dir: db
+
+archives:
+  - id: cbnode
+    wrap_in_directory: true
+    files:
+      - LICENSE
+      - cmd/cbnode/README.md
+      - cmd/cbnode/cfg.api.toml
+      - cmd/cbnode/cfg.builder.toml
+
+checksum:
+  name_template: 'checksums.txt'
+
+snapshot:
+  name_template: "{{ .Tag }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
